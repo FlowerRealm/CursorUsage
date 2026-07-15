@@ -687,52 +687,52 @@
           <div class="empty-hint" style="color:var(--muted);font-size:13px;padding:12px 0">暂无数据</div>
         </div>
       </div>
+  </div>
+  </section>
+
+  <section class="table-section">
+    <h2 class="table-title">模型调用明细</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>模型</th>
+            <th class="num">调用</th>
+            <th class="num">Input Tokens</th>
+            <th class="num">Output Tokens</th>
+            <th class="num">Cache Read</th>
+            <th class="num">Cache Write</th>
+            <th class="num">费用</th>
+          </tr>
+        </thead>
+        <tbody id="modelBody"></tbody>
+      </table>
     </div>
-    </section>
+  </section>
 
-    <section class="table-section">
-      <h2 class="table-title">模型调用明细</h2>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>模型</th>
-              <th class="num">调用</th>
-              <th class="num">Input Tokens</th>
-              <th class="num">Output Tokens</th>
-              <th class="num">Cache Read</th>
-              <th class="num">Cache Write</th>
-              <th class="num">费用</th>
-            </tr>
-          </thead>
-          <tbody id="modelBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="table-section events-section">
-      <div class="events-top">
-        <h2 class="table-title">最近调用记录</h2>
-        <div class="event-detail" id="eventDetail"></div>
-      </div>
-      <div class="events-scroll">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>时间</th>
-              <th>模型</th>
-              <th>来源</th>
-              <th class="num">Input</th>
-              <th class="num">Output</th>
-              <th class="num">Cache R</th>
-              <th class="num">Cache W</th>
-              <th class="num">费用</th>
-            </tr>
-          </thead>
-          <tbody id="eventsBody"></tbody>
-        </table>
-      </div>
-    </section>
+  <section class="table-section events-section">
+    <div class="events-top">
+      <h2 class="table-title">最近调用记录</h2>
+      <div class="event-detail" id="eventDetail"></div>
+    </div>
+    <div class="events-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>模型</th>
+            <th>来源</th>
+            <th class="num">Input</th>
+            <th class="num">Output</th>
+            <th class="num">Cache R</th>
+            <th class="num">Cache W</th>
+            <th class="num">费用</th>
+          </tr>
+        </thead>
+        <tbody id="eventsBody"></tbody>
+      </table>
+    </div>
+  </section>
   </div>
 
   <script>
@@ -985,15 +985,15 @@
         const label = item.kind || 'unknown';
         return (
           '<div class="cat-item">' +
-            '<div class="cat-meta">' +
-              '<span class="cat-dot" style="background:' + color + '"></span>' +
-              '<span class="cat-name">' + label + '</span>' +
-              '<span class="cat-count">' + Number(item.count).toLocaleString() + '</span>' +
-              '<span class="cat-pct">' + pct.toFixed(1) + '%</span>' +
-            '</div>' +
-            '<div class="cat-bar-track">' +
-              '<div class="cat-bar-fill" style="background:' + color + ';width:' + pct + '%"></div>' +
-            '</div>' +
+          '<div class="cat-meta">' +
+          '<span class="cat-dot" style="background:' + color + '"></span>' +
+          '<span class="cat-name">' + label + '</span>' +
+          '<span class="cat-count">' + Number(item.count).toLocaleString() + '</span>' +
+          '<span class="cat-pct">' + pct.toFixed(1) + '%</span>' +
+          '</div>' +
+          '<div class="cat-bar-track">' +
+          '<div class="cat-bar-fill" style="background:' + color + ';width:' + pct + '%"></div>' +
+          '</div>' +
           '</div>'
         );
       }).join('');
@@ -1106,8 +1106,6 @@
       currentView = btn.dataset.view;
       if (typeof vscodeApi !== 'undefined') {
         vscodeApi.postMessage({ type: 'setView', view: currentView });
-      } else {
-        renderAll(generateMockData(currentView));
       }
     });
 
@@ -1123,8 +1121,6 @@
     document.getElementById('refreshBtn').addEventListener('click', () => {
       if (typeof vscodeApi !== 'undefined') {
         vscodeApi.postMessage({ type: 'refresh' });
-      } else {
-        renderAll(generateMockData(currentView));
       }
     });
 
@@ -1134,89 +1130,6 @@
     new MutationObserver(() => {
       if (cachedData) renderMainChart(cachedData);
     }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
-
-    /* ═══ Mock Data ═══ */
-    function generateMockData(view) {
-      const { start, end } = getRange(view);
-      const now = Date.now();
-      const models = [
-        { name: 'claude-sonnet-4-20250514', weight: 35, avgIn: 12000, avgOut: 4000 },
-        { name: 'gpt-4o', weight: 20, avgIn: 8000, avgOut: 3000 },
-        { name: 'claude-3.5-sonnet', weight: 15, avgIn: 10000, avgOut: 3500 },
-        { name: 'gemini-2.0-flash', weight: 12, avgIn: 5000, avgOut: 1500 },
-        { name: 'cursor-small', weight: 10, avgIn: 3000, avgOut: 800 },
-        { name: 'gpt-4o-mini', weight: 8, avgIn: 4000, avgOut: 1200 },
-      ];
-      const totalWeight = models.reduce((s, m) => s + m.weight, 0);
-      function pickModel() { let r = Math.random() * totalWeight; for (const m of models) { r -= m.weight; if (r <= 0) return m; } return models[0]; }
-      function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
-
-      const evtCount = view === 'day' ? 60 : view === 'month' ? 250 : 800;
-      const events = [];
-      for (let i = 0; i < evtCount; i++) {
-        const ts = start + Math.random() * (Math.min(end, now) - start);
-        const h = new Date(ts).getHours();
-        if ((h < 7 || h > 23) && Math.random() > 0.12) continue;
-        const m = pickModel();
-        const inTok = Math.round(m.avgIn * (0.3 + Math.random() * 1.4));
-        const outTok = Math.round(m.avgOut * (0.2 + Math.random() * 1.6));
-        const cr = Math.random() > 0.25 ? Math.round(inTok * (0.5 + Math.random() * 2)) : 0;
-        const cw = Math.random() > 0.65 ? Math.round(outTok * (0.1 + Math.random() * 0.4)) : 0;
-        const cost = Math.max(0.1, Math.round((inTok * 0.003 + outTok * 0.015 - cr * 0.001) * 100) / 100);
-        const srcRoll = Math.random();
-        const mockRaw = srcRoll < 0.55
-          ? JSON.stringify({ requestsCosts: cost })
-          : srcRoll < 0.85
-            ? JSON.stringify({ isTokenBasedCall: true })
-            : JSON.stringify({ usageBasedCosts: String(cost) });
-        const kinds = ['agent', 'chat', 'composer', 'tab', 'cmd-k'];
-        const kind = kinds[Math.floor(Math.random() * kinds.length)];
-        events.push({
-          eventKey: 'e' + i, timestamp: Math.round(ts), model: m.name, kind,
-          inputTokens: inTok, outputTokens: outTok, cacheReadTokens: cr, cacheWriteTokens: cw,
-          totalCents: cost, chargedCents: cost, requestsCosts: null,
-          conversationId: 'conv-' + randInt(1, 40), rawJson: mockRaw
-        });
-      }
-      events.sort((a, b) => b.timestamp - a.timestamp);
-
-      const byModelMap = {};
-      const byKindMap = {};
-      events.forEach(e => {
-        if (!byModelMap[e.model]) byModelMap[e.model] = { model: e.model, count: 0, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, chargedCents: 0 };
-        const m = byModelMap[e.model];
-        m.count++; m.inputTokens += e.inputTokens; m.outputTokens += e.outputTokens;
-        m.cacheReadTokens += e.cacheReadTokens; m.cacheWriteTokens += e.cacheWriteTokens; m.chargedCents += e.chargedCents;
-        const kindLabel = e.kind || 'unknown';
-        byKindMap[kindLabel] = (byKindMap[kindLabel] || 0) + 1;
-      });
-      const byKind = Object.keys(byKindMap).map(kind => ({ kind, count: byKindMap[kind] }))
-        .sort((a, b) => b.count - a.count);
-
-      return {
-        view,
-        rangeStart: start, rangeEnd: end,
-        billing: {
-          period: {
-            fetchedAt: now, source: 'mock', rawJson: '{}',
-            billingCycleStart: new Date(2026, 6, 1).getTime(), billingCycleEnd: new Date(2026, 6, 31).getTime(),
-            membershipType: 'pro', totalSpendCents: 4250, includedSpendCents: 4250, bonusSpendCents: 0,
-            limitCents: 50000, remainingCents: 45750, autoPercent: 62.3, apiPercent: 37.7, totalPercent: 8.5,
-            displayMessage: null, planMessage: null, apiMessage: null
-          },
-          events: {
-            count: events.length,
-            inputTokens: events.reduce((s, e) => s + e.inputTokens, 0),
-            outputTokens: events.reduce((s, e) => s + e.outputTokens, 0),
-            cacheReadTokens: events.reduce((s, e) => s + e.cacheReadTokens, 0),
-            cacheWriteTokens: events.reduce((s, e) => s + e.cacheWriteTokens, 0),
-            chargedCents: events.reduce((s, e) => s + e.chargedCents, 0),
-            byModel: Object.values(byModelMap), byKind,
-            recent: events
-          }
-        }
-      };
-    }
 
     /* ═══ Init ═══ */
     function init() {
@@ -1237,8 +1150,6 @@
           }
         });
         vscodeApi.postMessage({ type: 'ready' });
-      } else {
-        renderAll(generateMockData(currentView));
       }
     }
 
