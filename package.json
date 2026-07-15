@@ -1,8 +1,8 @@
 {
   "name": "cursor-usage-tracker",
   "displayName": "Cursor Usage Tracker",
-  "description": "Track Cursor AI request usage with day/week/month/year charts",
-  "version": "0.1.0",
+  "description": "Track Cursor AI usage and billing via official APIs (day/week/month/year charts)",
+  "version": "0.2.0",
   "publisher": "cursor-usage",
   "engines": {
     "vscode": "^1.85.0"
@@ -17,44 +17,24 @@
   "contributes": {
     "commands": [
       {
-        "command": "cursorUsage.installHook",
-        "title": "CursorUsage: Install Hook"
-      },
-      {
-        "command": "cursorUsage.uninstallHook",
-        "title": "CursorUsage: Uninstall Hook"
-      },
-      {
         "command": "cursorUsage.showDashboard",
         "title": "CursorUsage: Show Dashboard"
       },
       {
         "command": "cursorUsage.syncBilling",
-        "title": "CursorUsage: Sync Billing (auto)"
+        "title": "CursorUsage: Sync Billing"
       },
       {
         "command": "cursorUsage.exportData",
         "title": "CursorUsage: Export Data"
       },
       {
-        "command": "cursorUsage.checkHookStatus",
-        "title": "CursorUsage: Check Hook Status"
-      },
-      {
-        "command": "cursorUsage.enableDetailLogging",
-        "title": "CursorUsage: Enable Detail Logging"
-      },
-      {
-        "command": "cursorUsage.disableDetailLogging",
-        "title": "CursorUsage: Disable Detail Logging"
-      },
-      {
-        "command": "cursorUsage.openDetailLog",
-        "title": "CursorUsage: Open Request Detail Log"
-      },
-      {
         "command": "cursorUsage.openTokensLog",
         "title": "CursorUsage: Open Tokens Log"
+      },
+      {
+        "command": "cursorUsage.showStatus",
+        "title": "CursorUsage: Show Status"
       }
     ]
   },

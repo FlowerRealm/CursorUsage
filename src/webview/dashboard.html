@@ -681,33 +681,13 @@
       </div>
       <div class="panel">
         <div class="panel-header">
-          <h2>请求类型分布</h2>
+          <h2>调用类型分布</h2>
         </div>
         <div class="cat-list" id="catList">
-          <div class="cat-item">
-            <div class="cat-meta">
-              <span class="cat-dot" style="background:var(--emerald)"></span>
-              <span class="cat-name">Agent</span>
-              <span class="cat-count" id="cc-agent">0</span>
-              <span class="cat-pct" id="cp-agent">0%</span>
-            </div>
-            <div class="cat-bar-track">
-              <div class="cat-bar-fill" id="cb-agent" style="background:var(--emerald);width:0"></div>
-            </div>
-          </div>
-          <div class="cat-item">
-            <div class="cat-meta">
-              <span class="cat-dot" style="background:var(--amber)"></span>
-              <span class="cat-name">Tab</span>
-              <span class="cat-count" id="cc-tab">0</span>
-              <span class="cat-pct" id="cp-tab">0%</span>
-            </div>
-            <div class="cat-bar-track">
-              <div class="cat-bar-fill" id="cb-tab" style="background:var(--amber);width:0"></div>
-            </div>
-          </div>
+          <div class="empty-hint" style="color:var(--muted);font-size:13px;padding:12px 0">暂无数据</div>
         </div>
       </div>
+    </div>
     </section>
 
     <section class="table-section">
@@ -991,20 +971,32 @@
     }
 
     function renderCategoryBars(data) {
-      let agentCount = 0, tabCount = 0;
-      (data.pie || []).forEach(p => {
-        if (p.name === 'chat' || p.name === 'agent') agentCount += p.value;
-        else if (p.name === 'tab') tabCount = p.value;
-      });
-      const total = agentCount + tabCount || 1;
-      const agentPct = agentCount / total * 100;
-      const tabPct = tabCount / total * 100;
-      document.getElementById('cc-agent').textContent = agentCount.toLocaleString();
-      document.getElementById('cp-agent').textContent = agentPct.toFixed(1) + '%';
-      document.getElementById('cb-agent').style.width = agentPct + '%';
-      document.getElementById('cc-tab').textContent = tabCount.toLocaleString();
-      document.getElementById('cp-tab').textContent = tabPct.toFixed(1) + '%';
-      document.getElementById('cb-tab').style.width = tabPct + '%';
+      const KIND_COLORS = ['#34D399', '#FBBF24', '#818CF8', '#FB7185', '#22D3EE', '#A78BFA', '#F97316', '#14B8A6'];
+      const byKind = (data.billing && data.billing.events && data.billing.events.byKind) || [];
+      const list = document.getElementById('catList');
+      if (!byKind.length) {
+        list.innerHTML = '<div class="empty-hint" style="color:var(--muted);font-size:13px;padding:12px 0">暂无数据</div>';
+        return;
+      }
+      const total = byKind.reduce((sum, item) => sum + (item.count || 0), 0) || 1;
+      list.innerHTML = byKind.map((item, index) => {
+        const pct = (item.count / total) * 100;
+        const color = KIND_COLORS[index % KIND_COLORS.length];
+        const label = item.kind || 'unknown';
+        return (
+          '<div class="cat-item">' +
+            '<div class="cat-meta">' +
+              '<span class="cat-dot" style="background:' + color + '"></span>' +
+              '<span class="cat-name">' + label + '</span>' +
+              '<span class="cat-count">' + Number(item.count).toLocaleString() + '</span>' +
+              '<span class="cat-pct">' + pct.toFixed(1) + '%</span>' +
+            '</div>' +
+            '<div class="cat-bar-track">' +
+              '<div class="cat-bar-fill" style="background:' + color + ';width:' + pct + '%"></div>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
     }
 
     function renderModelTable(data) {
@@ -1177,8 +1169,10 @@
           : srcRoll < 0.85
             ? JSON.stringify({ isTokenBasedCall: true })
             : JSON.stringify({ usageBasedCosts: String(cost) });
+        const kinds = ['agent', 'chat', 'composer', 'tab', 'cmd-k'];
+        const kind = kinds[Math.floor(Math.random() * kinds.length)];
         events.push({
-          eventKey: 'e' + i, timestamp: Math.round(ts), model: m.name, kind: null,
+          eventKey: 'e' + i, timestamp: Math.round(ts), model: m.name, kind,
           inputTokens: inTok, outputTokens: outTok, cacheReadTokens: cr, cacheWriteTokens: cw,
           totalCents: cost, chargedCents: cost, requestsCosts: null,
           conversationId: 'conv-' + randInt(1, 40), rawJson: mockRaw
@@ -1187,25 +1181,20 @@
       events.sort((a, b) => b.timestamp - a.timestamp);
 
       const byModelMap = {};
+      const byKindMap = {};
       events.forEach(e => {
         if (!byModelMap[e.model]) byModelMap[e.model] = { model: e.model, count: 0, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, chargedCents: 0 };
         const m = byModelMap[e.model];
         m.count++; m.inputTokens += e.inputTokens; m.outputTokens += e.outputTokens;
         m.cacheReadTokens += e.cacheReadTokens; m.cacheWriteTokens += e.cacheWriteTokens; m.chargedCents += e.chargedCents;
+        const kindLabel = e.kind || 'unknown';
+        byKindMap[kindLabel] = (byKindMap[kindLabel] || 0) + 1;
       });
-
-      const pie = [
-        { name: 'agent', value: Math.round(events.length * 0.85 * (0.9 + Math.random() * 0.2)) },
-        { name: 'tab', value: Math.round(events.length * 0.15 * (0.8 + Math.random() * 0.4)) }
-      ];
-      const labels = allLabels(view, start);
-      const buckets = [];
-      for (const label of labels) for (const cat of ['agent', 'tab'])
-        buckets.push({ label, category: cat, count: randInt(0, view === 'day' ? 12 : view === 'month' ? 30 : 150) });
+      const byKind = Object.keys(byKindMap).map(kind => ({ kind, count: byKindMap[kind] }))
+        .sort((a, b) => b.count - a.count);
 
       return {
-        view, aiOnly: true, buckets, pie,
-        kpi: { total: events.length, dailyAvg: Math.round(events.length / 14 * 10) / 10, peakLabel: '-', peakCount: 0 },
+        view,
         rangeStart: start, rangeEnd: end,
         billing: {
           period: {
@@ -1222,7 +1211,7 @@
             cacheReadTokens: events.reduce((s, e) => s + e.cacheReadTokens, 0),
             cacheWriteTokens: events.reduce((s, e) => s + e.cacheWriteTokens, 0),
             chargedCents: events.reduce((s, e) => s + e.chargedCents, 0),
-            byModel: Object.values(byModelMap).sort((a, b) => b.count - a.count),
+            byModel: Object.values(byModelMap), byKind,
             recent: events
           }
         }

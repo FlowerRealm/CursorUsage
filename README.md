@@ -1,6 +1,17 @@
 # Cursor Usage Tracker
 
-VS Code / Cursor extension that patches Cursor's Electron main process to capture real `*.cursor.sh` network traffic, stores requests in SQLite, and visualizes day/week/month/year usage with ECharts.
+VS Code / Cursor extension that reads your local Cursor login credentials and syncs **official billing / usage data** into SQLite, then visualizes day / month / year usage with ECharts.
+
+No Electron hook or network capture is required.
+
+## How it works
+
+1. Reads `cursorAuth/accessToken` from Cursor's local `state.vscdb`
+2. Calls official endpoints:
+   - `api2.cursor.sh` — period usage (plan spend / limits)
+   - `cursor.com/api` — usage summary + per-request events (token / cost)
+3. Stores billing period + usage events in `~/.cursor-usage-tracker/usage.db`
+4. Dashboard charts model distribution, kind breakdown, tokens, and cost
 
 ## Quick start
 
@@ -13,39 +24,42 @@ Then press **F5** (Run Extension) or install the extension from this folder.
 
 ## Commands
 
-- **CursorUsage: Install Hook** — patch Cursor `main.js` (restart required)
-- **CursorUsage: Uninstall Hook** — restore backup
-- **CursorUsage: Show Dashboard** — open charts
-- **CursorUsage: Export Data** — export CSV
-- **CursorUsage: Check Hook Status** — show patch / log status
-- **CursorUsage: Enable Detail Logging** — append rich request details to a separate file (default OFF)
-- **CursorUsage: Disable Detail Logging** — stop writing details; **does not delete** the detail file
-- **CursorUsage: Open Request Detail Log** — open `~/.cursor-usage-tracker/requests-detail.jsonl`
+| Command | Description |
+|---------|-------------|
+| **CursorUsage: Show Dashboard** | Open usage charts |
+| **CursorUsage: Sync Billing** | Force refresh from official APIs |
+| **CursorUsage: Export Data** | Export usage events as CSV |
+| **CursorUsage: Open Tokens Log** | Open `~/.cursor-usage-tracker/usage-tokens.jsonl` |
+| **CursorUsage: Show Status** | Show local DB / tokens log status |
 
-## Detail logging (debug)
+## Requirements
 
-Default is **off**. When enabled, each `*.cursor.sh` request also appends a richer JSON line to:
+- Cursor must be signed in on this machine (so `state.vscdb` has a valid access token)
+- Network access to `api2.cursor.sh` and `cursor.com`
 
-`~/.cursor-usage-tracker/requests-detail.jsonl`
+## Local data
 
-Fields include: url, method, status, type, id, ip, fromCache, referrer, statusLine, resHeaders.
+All data lives under `~/.cursor-usage-tracker/`:
 
-Toggle is controlled by flag file `detail-logging.on` (create = on, delete = off). Turning off never clears the detail log so you can re-enable and continue appending.
+| File | Purpose |
+|------|---------|
+| `usage.db` | SQLite: billing periods + usage events |
+| `usage-tokens.jsonl` | Last sync's full tokenUsage dump |
 
-CLI:
-
-```bash
-node patch-cursor.mjs detail-on
-node patch-cursor.mjs detail-off
-```
-
-### Hot-reload (v0.3+)
-
-Capture logic lives in `~/.cursor-usage-tracker/hook.mjs`. After installing the v0.3 loader once:
+## Preview dashboard (browser)
 
 ```bash
-node patch-cursor.mjs patch      # upgrades loader + writes hook.mjs (restart Cursor ONCE)
-node patch-cursor.mjs sync-hook  # later: push repo hook.mjs → home (no restart)
+npm run preview
 ```
 
-Editing `hook.mjs` hot-reloads automatically — no Cursor restart needed unless the thin loader in `main.js` itself changes.
+Serves the dashboard HTML with mock data for UI work outside the extension host.
+
+## Migrating from the old hook-based version
+
+Network capture / Electron patching has been removed. If you previously ran **Install Hook**:
+
+1. Restore Cursor's `main.js` from `~/.cursor-usage-tracker/main.js.bak` (or reinstall Cursor)
+2. Restart Cursor
+3. Use **Sync Billing** — data now comes only from official APIs
+
+Old `requests.jsonl` / capture tables are no longer used. Billing events already in `usage.db` are kept.

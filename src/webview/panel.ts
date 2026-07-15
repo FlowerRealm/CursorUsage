@@ -2,15 +2,13 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getDashboardData, ViewMode, DashboardData } from '../analytics/aggregator';
-import { importNewEntries } from '../storage/importer';
 import { syncBilling } from '../billing/sync';
 
 export class DashboardPanel {
   public static currentPanel: DashboardPanel | undefined;
   private readonly panel: vscode.WebviewPanel;
   private disposables: vscode.Disposable[] = [];
-  private view: ViewMode = 'day';
-  private aiOnly = true;
+  private view: ViewMode = 'month';
   private syncing = false;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
@@ -18,16 +16,13 @@ export class DashboardPanel {
     this.panel.webview.html = this.getHtml(extensionUri);
     this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
     this.panel.webview.onDidReceiveMessage(
-      async (msg) => {
-        if (msg.type === 'setView') {
-          this.view = msg.view as ViewMode;
+      async (message) => {
+        if (message.type === 'setView') {
+          this.view = message.view as ViewMode;
           this.pushData();
-        } else if (msg.type === 'setAiOnly') {
-          this.aiOnly = !!msg.aiOnly;
-          this.pushData();
-        } else if (msg.type === 'refresh') {
-          await this.refreshAll();
-        } else if (msg.type === 'ready') {
+        } else if (message.type === 'refresh') {
+          await this.refreshAll(true);
+        } else if (message.type === 'ready') {
           this.pushData();
           void this.refreshAll(false);
         }
@@ -62,28 +57,26 @@ export class DashboardPanel {
 
   public pushData(syncNote?: string): void {
     try {
-      importNewEntries();
-      const data: DashboardData = getDashboardData(this.view, this.aiOnly);
+      const data: DashboardData = getDashboardData(this.view);
       this.panel.webview.postMessage({
         type: 'data',
         payload: data,
         syncNote: syncNote || null
       });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      this.panel.webview.postMessage({ type: 'error', message: msg });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.panel.webview.postMessage({ type: 'error', message });
     }
   }
 
-  private async refreshAll(showStatus = true): Promise<void> {
+  private async refreshAll(forceRefresh = false): Promise<void> {
     if (this.syncing) {
       return;
     }
     this.syncing = true;
     this.panel.webview.postMessage({ type: 'syncing', value: true });
     try {
-      importNewEntries();
-      const result = await syncBilling();
+      const result = await syncBilling(forceRefresh);
       let note = '';
       if (result.ok) {
         note = `Billing: ${result.source}`;
@@ -96,19 +89,16 @@ export class DashboardPanel {
         if (result.warnings.length) {
           note += ` · warn: ${result.warnings[0]}`;
         }
-        if (showStatus) {
-          vscode.window.setStatusBarMessage(`Cursor Usage synced (${result.source})`, 4000);
-        }
       } else {
-        note = `Billing sync failed: ${result.error || 'unknown'}`;
-        if (showStatus) {
-          vscode.window.showWarningMessage(note);
+        note = `Sync failed: ${result.error || 'unknown'}`;
+        if (result.warnings.length) {
+          note += ` · ${result.warnings[0]}`;
         }
       }
       this.pushData(note);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      this.panel.webview.postMessage({ type: 'error', message: msg });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.panel.webview.postMessage({ type: 'error', message });
     } finally {
       this.syncing = false;
       this.panel.webview.postMessage({ type: 'syncing', value: false });
@@ -118,25 +108,27 @@ export class DashboardPanel {
   private getHtml(extensionUri: vscode.Uri): string {
     const htmlPath = path.join(extensionUri.fsPath, 'dist', 'dashboard.html');
     let html = fs.readFileSync(htmlPath, 'utf8');
+    const cspSource = this.panel.webview.cspSource;
     const csp = [
       `default-src 'none'`,
-      `style-src ${this.panel.webview.cspSource} 'unsafe-inline' https://cdn.jsdelivr.net`,
-      `script-src ${this.panel.webview.cspSource} 'unsafe-inline' https://cdn.jsdelivr.net`,
-      `img-src ${this.panel.webview.cspSource} https: data:`,
-      `font-src ${this.panel.webview.cspSource} https://cdn.jsdelivr.net data:`,
-      `connect-src https://cdn.jsdelivr.net`,
-      `img-src ${this.panel.webview.cspSource} https: data:`
+      `img-src ${cspSource} https: data:`,
+      `script-src ${cspSource} https://cdn.jsdelivr.net 'unsafe-inline'`,
+      `style-src ${cspSource} 'unsafe-inline'`,
+      `font-src ${cspSource} https: data:`,
+      `connect-src https://cdn.jsdelivr.net`
     ].join('; ');
     html = html.replace('{{CSP}}', csp);
     return html;
   }
 
-  public dispose(): void {
+  private dispose(): void {
     DashboardPanel.currentPanel = undefined;
     this.panel.dispose();
     while (this.disposables.length) {
-      const d = this.disposables.pop();
-      d?.dispose();
+      const disposable = this.disposables.pop();
+      if (disposable) {
+        disposable.dispose();
+      }
     }
   }
 }
