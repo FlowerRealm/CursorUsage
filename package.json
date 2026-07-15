@@ -13,6 +13,7 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "icon": "icons/icon-dark.png",
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [

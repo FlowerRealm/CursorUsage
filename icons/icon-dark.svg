@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="darkBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#16213e"/>
+    </linearGradient>
+    <linearGradient id="darkArcFill" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect x="4" y="4" width="120" height="120" rx="26" ry="26" fill="url(#darkBg)"/>
+
+  <!-- Gauge: 270-degree arc track (from 135° to 45° going clockwise, i.e. lower-left to lower-right) -->
+  <!-- Center at (64,68), radius 44 -->
+  <!-- 135° -> x=64+44*cos(135°)=64-31.1=32.9, y=68+44*sin(135°)=68+31.1=99.1 -->
+  <!-- 45° -> x=64+44*cos(45°)=64+31.1=95.1, y=68+44*sin(45°)=68+31.1=99.1 -->
+  <!-- Going clockwise from 135° to 45° (the long way, 270°) -->
+  <path d="M 32.9 99.1 A 44 44 0 1 1 95.1 99.1" 
+        fill="none" stroke="#2a2a4a" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Gauge: filled arc (~70% of 270° = 189°, from 135° going clockwise 189°, ending at 324° = -36°) -->
+  <!-- 324° -> x=64+44*cos(-36°)=64+35.6=99.6, y=68+44*sin(-36°)=68-25.9=42.1 -->
+  <path d="M 32.9 99.1 A 44 44 0 1 1 99.6 42.1" 
+        fill="none" stroke="url(#darkArcFill)" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Major tick marks (every 45° along the 270° arc) -->
+  <!-- 7 major ticks from 135° to 45° at 45° intervals: 135, 180, 225, 270, 315, 0, 45 -->
+  <!-- Tick = short line from radius 50 to radius 44, centered at (64,68) -->
+  <line x1="28.3" y1="103.7" x2="33.6" y2="98.4" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="20" y1="68" x2="26.5" y2="68" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="28.3" y1="32.3" x2="33.6" y2="37.6" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="64" y1="18" x2="64" y2="24.5" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="99.7" y1="32.3" x2="94.4" y2="37.6" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="108" y1="68" x2="101.5" y2="68" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="99.7" y1="103.7" x2="94.4" y2="98.4" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Minor tick marks (between major ticks) -->
+  <line x1="22.5" y1="87.2" x2="27.2" y2="84.5" stroke="#4b5563" stroke-width="1" stroke-linecap="round"/>
+  <line x1="22.5" y1="48.8" x2="27.2" y2="51.5" stroke="#4b5563" stroke-width="1" stroke-linecap="round"/>
+  <line x1="44.2" y1="22.9" x2="46.8" y2="27.6" stroke="#4b5563" stroke-width="1" stroke-linecap="round"/>
+  <line x1="83.8" y1="22.9" x2="81.2" y2="27.6" stroke="#4b5563" stroke-width="1" stroke-linecap="round"/>
+  <line x1="105.5" y1="48.8" x2="100.8" y2="51.5" stroke="#4b5563" stroke-width="1" stroke-linecap="round"/>
+  <line x1="105.5" y1="87.2" x2="100.8" y2="84.5" stroke="#4b5563" stroke-width="1" stroke-linecap="round"/>
+
+  <!-- Cursor paper airplane (from official logo, scaled to fit center) -->
+  <!-- Original viewBox 512x512, logo centered. Scaling to ~56px wide, positioned at center -->
+  <g transform="translate(64,68) scale(0.15) translate(-256,-256)">
+    <!-- Hexagonal outline -->
+    <path d="M415.035 156.35l-151.503-87.4695c-4.865-2.8094-10.868-2.8094-15.733 0L96.302 156.35c-4.0897 2.362-6.6146 6.729-6.6146 11.459v176.383c0 4.73 2.5249 9.097 6.6146 11.458l151.5039 87.47c4.865 2.809 10.868 2.809 15.733 0l151.504-87.47c4.089-2.361 6.614-6.728 6.614-11.458V167.809c0-4.73-2.525-9.097-6.614-11.459z" 
+          fill="none" stroke="#e0e7ff" stroke-width="12" opacity="0.9"/>
+    <!-- Inner triangle (the paper airplane shape) -->
+    <path d="M405.519 174.878L259.264 428.198c-.988 1.707-3.599 1.01-3.599-.967V261.359c0-3.314-1.771-6.379-4.644-8.044L107.376 170.383c-1.707-.988-1.01-3.599.968-3.599h292.509c4.154 0 6.75 4.503 4.673 8.101l-.007-.007z" 
+          fill="#e0e7ff" opacity="0.95"/>
+  </g>
+
+  <!-- Needle glow at the filled arc endpoint -->
+  <circle cx="99.6" cy="42.1" r="3.5" fill="#ec4899" opacity="0.5"/>
+  <circle cx="99.6" cy="42.1" r="1.8" fill="#fff" opacity="0.9"/>
+</svg>
