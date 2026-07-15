@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { loadCursorCredentials, CursorCredentials } from './credentials';
 import {
   fetchCurrentPeriodUsage,
@@ -16,7 +15,7 @@ import {
   BillingPeriodRow,
   UsageEventRow
 } from '../storage/database';
-import { DATA_DIR, TOKENS_LOG_FILE, ensureDataDir } from '../paths';
+import { TOKENS_LOG_FILE, TOKENS_TMP_FILE, ensureDataDir } from '../paths';
 
 const LOCAL_CACHE_TTL_MS = 30 * 60 * 1000;
 
@@ -113,9 +112,8 @@ function writeTokensLog(events: UsageEvent[]): void {
       event: 'token'
     })
   );
-  const temporaryPath = path.join(DATA_DIR, 'usage-tokens.jsonl.tmp');
-  fs.writeFileSync(temporaryPath, lines.length ? lines.join('\n') + '\n' : '', 'utf8');
-  fs.renameSync(temporaryPath, TOKENS_LOG_FILE);
+  fs.writeFileSync(TOKENS_TMP_FILE, lines.length ? lines.join('\n') + '\n' : '', 'utf8');
+  fs.renameSync(TOKENS_TMP_FILE, TOKENS_LOG_FILE);
 }
 
 async function fetchPeriod(

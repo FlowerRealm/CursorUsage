@@ -10,7 +10,7 @@ No Electron hook or network capture is required.
 2. Calls official endpoints:
    - `api2.cursor.sh` — period usage (plan spend / limits)
    - `cursor.com/api` — usage summary + per-request events (token / cost)
-3. Stores billing period + usage events in `~/.cursor-usage-tracker/usage.db`
+3. Stores billing period + usage events in `~/.cursor-usage-tracker/db/usage.db`
 4. Dashboard charts model distribution, kind breakdown, tokens, and cost
 
 ## Quick start
@@ -29,7 +29,7 @@ Then press **F5** (Run Extension) or install the extension from this folder.
 | **CursorUsage: Show Dashboard** | Open usage charts |
 | **CursorUsage: Sync Billing** | Force refresh from official APIs |
 | **CursorUsage: Export Data** | Export usage events as CSV |
-| **CursorUsage: Open Tokens Log** | Open `~/.cursor-usage-tracker/usage-tokens.jsonl` |
+| **CursorUsage: Open Tokens Log** | Open `~/.cursor-usage-tracker/logs/usage-tokens.jsonl` |
 | **CursorUsage: Show Status** | Show local DB / tokens log status |
 
 ## Requirements
@@ -41,10 +41,11 @@ Then press **F5** (Run Extension) or install the extension from this folder.
 
 All data lives under `~/.cursor-usage-tracker/`:
 
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `usage.db` | SQLite: billing periods + usage events |
-| `usage-tokens.jsonl` | Last sync's full tokenUsage dump |
+| `db/usage.db` | SQLite: billing periods + usage events |
+| `logs/usage-tokens.jsonl` | Last sync's full tokenUsage dump |
+| `tmp/` | Temporary files for atomic writes |
 
 ## Preview dashboard (browser)
 

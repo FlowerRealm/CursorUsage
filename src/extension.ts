@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { DATA_DIR, ensureDataDir, TOKENS_LOG_FILE } from './paths';
+import { DATA_DIR, ensureDataDir, TOKENS_LOG_FILE, migrateLegacyFiles } from './paths';
 import { initDatabase, closeDatabase, getTotalEventCount } from './storage/database';
 import { exportCsv } from './analytics/aggregator';
 import { DashboardPanel } from './webview/panel';
@@ -10,6 +10,7 @@ import { syncBilling } from './billing/sync';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   ensureDataDir();
+  migrateLegacyFiles();
   await initDatabase(context.extensionPath);
 
   context.subscriptions.push(
