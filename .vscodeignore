@@ -1,0 +1,14 @@
+src/**
+node_modules/**
+tsconfig.json
+esbuild.js
+*.mjs
+.git/**
+.vscode/**
+**/*.ts
+**/*.map
+!dist/**
+!dist/hook.mjs
+!dist/preload-intercept.cjs
+!dist/dashboard.html
+!dist/extension.js

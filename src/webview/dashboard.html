@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="{{CSP}}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cursor Usage</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+  <style>
+    :root {
+      --bg: var(--vscode-editor-background, #09090B);
+      --fg: var(--vscode-editor-foreground, #FAFAFA);
+      --surface: var(--vscode-sideBar-background, #18181B);
+      --card: var(--vscode-editorWidget-background, #1a1a1f);
+      --border: var(--vscode-panel-border, #27272A);
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --muted: var(--vscode-descriptionForeground, #71717A);
+      --text-sec: #A1A1AA;
+      --accent: var(--vscode-button-background, #818CF8);
+      --accent-fg: var(--vscode-button-foreground, #fff);
+      --input-bg: var(--vscode-input-background, #27272A);
+      --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+      --hover: rgba(255, 255, 255, 0.05);
+      --subtle-fill: rgba(255, 255, 255, 0.04);
+      --row-border: rgba(255, 255, 255, 0.03);
+      --scroll-thumb: rgba(255, 255, 255, 0.1);
+      --scroll-hover: rgba(255, 255, 255, 0.18);
+      --chart-axis: #71717A;
+      --chart-grid: #1E1E22;
+      --chart-tip-bg: #27272A;
+      --chart-tip-border: #3F3F46;
+      --chart-tip-text: #E4E4E7;
+      --indigo: #818CF8;
+      --emerald: #34D399;
+      --violet: #A78BFA;
+      --amber: #FBBF24;
+      --cyan: #22D3EE;
+      --rose: #FB7185;
+      --orange: #F97316;
+      --teal: #14B8A6;
+      --radius: 10px;
+    }
+
+    /* ─── Light theme ─── */
+    body.vscode-light {
+      --card: var(--vscode-editorWidget-background, #ffffff);
+      --border-subtle: rgba(0, 0, 0, 0.08);
+      --text-sec: #6B7280;
+      --hover: rgba(0, 0, 0, 0.04);
+      --subtle-fill: rgba(0, 0, 0, 0.03);
+      --row-border: rgba(0, 0, 0, 0.06);
+      --scroll-thumb: rgba(0, 0, 0, 0.12);
+      --scroll-hover: rgba(0, 0, 0, 0.22);
+      --chart-axis: #9CA3AF;
+      --chart-grid: #F3F4F6;
+      --chart-tip-bg: #ffffff;
+      --chart-tip-border: #E5E7EB;
+      --chart-tip-text: #1F2937;
+      --indigo: #6366F1;
+      --emerald: #10B981;
+      --violet: #7C3AED;
+      --amber: #D97706;
+      --cyan: #0891B2;
+      --rose: #E11D48;
+      --orange: #EA580C;
+      --teal: #0D9488;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root:not(.vscode-dark) body:not(.vscode-dark) {
+        --card: #ffffff;
+        --border-subtle: rgba(0, 0, 0, 0.08);
+        --text-sec: #6B7280;
+        --hover: rgba(0, 0, 0, 0.04);
+        --subtle-fill: rgba(0, 0, 0, 0.03);
+        --row-border: rgba(0, 0, 0, 0.06);
+        --scroll-thumb: rgba(0, 0, 0, 0.12);
+        --scroll-hover: rgba(0, 0, 0, 0.22);
+        --chart-axis: #9CA3AF;
+        --chart-grid: #F3F4F6;
+        --chart-tip-bg: #ffffff;
+        --chart-tip-border: #E5E7EB;
+        --chart-tip-text: #1F2937;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .dashboard {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px 24px 40px;
+    }
+
+    .top-line {
+      height: 2px;
+      background: linear-gradient(90deg, var(--indigo), var(--cyan), var(--emerald));
+      border-radius: 2px;
+      margin-bottom: 20px;
+      opacity: 0.7;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-left h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header-left .period {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ─── Tabs / Buttons ─── */
+    .tab-group {
+      display: flex;
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      color: var(--text-sec);
+      border: none;
+      border-radius: 6px;
+      padding: 5px 14px;
+      font-size: 13px;
+      font-family: var(--sans);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-weight: 500;
+    }
+
+    .tab-btn:hover {
+      color: var(--fg);
+      background: var(--hover);
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: var(--accent-fg);
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface);
+      color: var(--text-sec);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-family: var(--sans);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      color: var(--fg);
+      border-color: var(--accent);
+    }
+
+    .icon-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .sync-note {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ─── KPI Cards ─── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 1100px) {
+      .kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .kpi-card:hover {
+      border-color: var(--border);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .kpi-cost::before {
+      background: var(--amber);
+    }
+
+    .kpi-tokens::before {
+      background: var(--indigo);
+    }
+
+    .kpi-cache::before {
+      background: var(--cyan);
+    }
+
+    .kpi-auto::before {
+      background: var(--emerald);
+    }
+
+    .kpi-api::before {
+      background: var(--rose);
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-size: 26px;
+      font-weight: 700;
+      font-family: var(--mono);
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-family: var(--mono);
+    }
+
+    .kpi-bar-track {
+      height: 4px;
+      background: var(--subtle-fill);
+      border-radius: 2px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .kpi-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* ─── Charts Section ─── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 5fr 2fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .panel-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .chart-box {
+      width: 100%;
+      height: 340px;
+    }
+
+    /* ─── Category Bars ─── */
+    .cat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-top: 8px;
+    }
+
+    .cat-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .cat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cat-name {
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .cat-count {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .cat-pct {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    .cat-bar-track {
+      height: 28px;
+      background: var(--subtle-fill);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .cat-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+      min-width: 4px;
+    }
+
+    /* ─── Tables ─── */
+    .table-section {
+      background: var(--card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .table-title {
+      font-size: 14px;
+      font-weight: 600;
+      padding: 14px 18px 0;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      padding: 10px 0;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 8px 18px;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      background: var(--card);
+      z-index: 1;
+    }
+
+    .data-table th.num,
+    .data-table td.num {
+      text-align: right;
+      font-family: var(--mono);
+    }
+
+    .data-table td {
+      padding: 8px 18px;
+      border-bottom: 1px solid var(--row-border);
+      white-space: nowrap;
+    }
+
+    .data-table td.num {
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .data-table tbody tr {
+      transition: background 0.1s ease;
+      cursor: default;
+    }
+
+    .data-table tbody tr:hover td {
+      background: var(--hover);
+    }
+
+    .model-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    .model-name {
+      font-weight: 500;
+      font-size: 12px;
+    }
+
+    .total-row td {
+      font-weight: 600;
+      border-top: 1px solid var(--border);
+      color: var(--fg);
+    }
+
+    /* ─── Events Section ─── */
+    .events-section {
+      display: flex;
+      flex-direction: column;
+      max-height: 520px;
+    }
+
+    .events-top {
+      flex-shrink: 0;
+      padding: 14px 18px 0;
+    }
+
+    .events-top .table-title {
+      padding: 0;
+    }
+
+    .event-detail {
+      display: none;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      padding: 12px 0 10px;
+      margin-top: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .event-detail.visible {
+      display: flex;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .detail-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      font-weight: 500;
+    }
+
+    .detail-val {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .events-scroll {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .events-scroll .data-table tbody tr {
+      cursor: pointer;
+    }
+
+    .events-scroll .data-table tbody tr.selected td {
+      background: color-mix(in srgb, var(--accent) 15%, transparent);
+    }
+
+    /* ─── Error ─── */
+    .error-bar {
+      color: #f87171;
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    /* ─── Loading ─── */
+    @keyframes shimmer {
+
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
+    }
+
+    .loading .kpi-value,
+    .loading .kpi-sub {
+      animation: shimmer 1.5s ease-in-out infinite;
+      color: var(--muted) !important;
+    }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--scroll-thumb);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--scroll-hover);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dashboard loading" id="app">
+    <div class="top-line"></div>
+
+    <header class="header">
+      <div class="header-left">
+        <h1>Cursor Usage</h1>
+        <div class="period" id="periodText">加载中…</div>
+      </div>
+      <div class="header-right">
+        <div class="tab-group" id="viewTabs">
+          <button class="tab-btn" data-view="day">日</button>
+          <button class="tab-btn active" data-view="month">月</button>
+          <button class="tab-btn" data-view="year">年</button>
+        </div>
+        <button class="icon-btn" id="refreshBtn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M2.5 8a5.5 5.5 0 0 1 9.3-3.95L14 6M14 2v4h-4" />
+            <path d="M13.5 8a5.5 5.5 0 0 1-9.3 3.95L2 10M2 14v-4h4" />
+          </svg>
+          刷新
+        </button>
+        <span class="sync-note" id="syncNote"></span>
+      </div>
+    </header>
+
+    <div class="error-bar" id="errorBar"></div>
+
+    <section class="kpi-grid">
+      <div class="kpi-card kpi-cost">
+        <div class="kpi-label">总费用</div>
+        <div class="kpi-value" id="kv-cost">-</div>
+        <div class="kpi-sub" id="ks-cost">限额 -</div>
+      </div>
+      <div class="kpi-card kpi-tokens">
+        <div class="kpi-label">总 Tokens</div>
+        <div class="kpi-value" id="kv-tokens">-</div>
+        <div class="kpi-sub" id="ks-tokens">in - / out -</div>
+      </div>
+      <div class="kpi-card kpi-cache">
+        <div class="kpi-label">Cache Tokens</div>
+        <div class="kpi-value" id="kv-cache">-</div>
+        <div class="kpi-sub" id="ks-cache">read - / write -</div>
+      </div>
+      <div class="kpi-card kpi-auto">
+        <div class="kpi-label">Auto 使用</div>
+        <div class="kpi-value" id="kv-auto">-</div>
+        <div class="kpi-bar-track">
+          <div class="kpi-bar-fill" id="bar-auto" style="width:0; background:var(--emerald)"></div>
+        </div>
+      </div>
+      <div class="kpi-card kpi-api">
+        <div class="kpi-label">API 使用</div>
+        <div class="kpi-value" id="kv-api">-</div>
+        <div class="kpi-bar-track">
+          <div class="kpi-bar-fill" id="bar-api" style="width:0; background:var(--rose)"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="charts-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>模型调用分布</h2>
+          <div class="tab-group" id="chartTypeTabs">
+            <button class="tab-btn active" data-chart="bar">柱状</button>
+            <button class="tab-btn" data-chart="line">折线</button>
+            <button class="tab-btn" data-chart="pie">饼图</button>
+          </div>
+        </div>
+        <div id="mainChart" class="chart-box"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <h2>请求类型分布</h2>
+        </div>
+        <div class="cat-list" id="catList">
+          <div class="cat-item">
+            <div class="cat-meta">
+              <span class="cat-dot" style="background:var(--emerald)"></span>
+              <span class="cat-name">Agent</span>
+              <span class="cat-count" id="cc-agent">0</span>
+              <span class="cat-pct" id="cp-agent">0%</span>
+            </div>
+            <div class="cat-bar-track">
+              <div class="cat-bar-fill" id="cb-agent" style="background:var(--emerald);width:0"></div>
+            </div>
+          </div>
+          <div class="cat-item">
+            <div class="cat-meta">
+              <span class="cat-dot" style="background:var(--amber)"></span>
+              <span class="cat-name">Tab</span>
+              <span class="cat-count" id="cc-tab">0</span>
+              <span class="cat-pct" id="cp-tab">0%</span>
+            </div>
+            <div class="cat-bar-track">
+              <div class="cat-bar-fill" id="cb-tab" style="background:var(--amber);width:0"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-section">
+      <h2 class="table-title">模型调用明细</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>模型</th>
+              <th class="num">调用</th>
+              <th class="num">Input Tokens</th>
+              <th class="num">Output Tokens</th>
+              <th class="num">Cache Read</th>
+              <th class="num">Cache Write</th>
+              <th class="num">费用</th>
+            </tr>
+          </thead>
+          <tbody id="modelBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="table-section events-section">
+      <div class="events-top">
+        <h2 class="table-title">最近调用记录</h2>
+        <div class="event-detail" id="eventDetail"></div>
+      </div>
+      <div class="events-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>模型</th>
+              <th>来源</th>
+              <th class="num">Input</th>
+              <th class="num">Output</th>
+              <th class="num">Cache R</th>
+              <th class="num">Cache W</th>
+              <th class="num">费用</th>
+            </tr>
+          </thead>
+          <tbody id="eventsBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const MODEL_PALETTE = [
+      '#818CF8', '#34D399', '#A78BFA', '#FBBF24',
+      '#22D3EE', '#FB7185', '#F97316', '#14B8A6',
+      '#E879F9', '#38BDF8', '#A3E635', '#FCA5A5',
+    ];
+
+    let currentView = 'month';
+    let chartType = 'bar';
+    let cachedData = null;
+    let mainChart;
+
+    /* ═══ Theme-aware chart colors ═══ */
+    function themeColors() {
+      const s = getComputedStyle(document.documentElement);
+      const v = k => s.getPropertyValue(k).trim();
+      return {
+        axis: v('--chart-axis') || '#71717A',
+        grid: v('--chart-grid') || '#1E1E22',
+        tipBg: v('--chart-tip-bg') || '#27272A',
+        tipBorder: v('--chart-tip-border') || '#3F3F46',
+        tipText: v('--chart-tip-text') || '#E4E4E7',
+        legend: v('--text-sec') || '#A1A1AA',
+        card: v('--card') || '#1a1a1f',
+      };
+    }
+
+    /* ═══ Formatters ═══ */
+    function fmtTok(n) {
+      if (n == null || isNaN(n)) return '-';
+      n = Number(n);
+      if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return n.toLocaleString();
+    }
+    function fmtUsd(cents) {
+      if (cents == null || isNaN(cents)) return '-';
+      return '$' + (Number(cents) / 100).toFixed(2);
+    }
+    function fmtPct(n) {
+      if (n == null || isNaN(n)) return '-';
+      return Number(n).toFixed(1) + '%';
+    }
+    function shortModel(m) {
+      if (!m) return '-';
+      return m.replace(/-\d{8}$/, '').replace(/^models\//, '');
+    }
+    function fmtTime(ts) {
+      if (!ts) return '-';
+      const d = new Date(ts);
+      const pad = v => String(v).padStart(2, '0');
+      return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    /* ═══ Time helpers ═══ */
+    function getRange(view) {
+      const now = new Date();
+      if (view === 'day') {
+        const s = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        return { start: s, end: s + 864e5 - 1 };
+      }
+      if (view === 'month') {
+        const s = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+        return { start: s, end: new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime() - 1 };
+      }
+      const s = new Date(now.getFullYear(), 0, 1).getTime();
+      return { start: s, end: new Date(now.getFullYear() + 1, 0, 1).getTime() - 1 };
+    }
+    function bucketLabel(ts, view) {
+      const d = new Date(ts);
+      if (view === 'day') return String(d.getHours()).padStart(2, '0');
+      if (view === 'month') return String(d.getDate()).padStart(2, '0');
+      return String(d.getMonth() + 1).padStart(2, '0');
+    }
+    function allLabels(view, start) {
+      if (view === 'day') return Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+      if (view === 'month') {
+        const d = new Date(start);
+        const days = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        return Array.from({ length: days }, (_, i) => String(i + 1).padStart(2, '0'));
+      }
+      return Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
+    }
+
+    function getModelColor(model, idx) {
+      return MODEL_PALETTE[idx % MODEL_PALETTE.length];
+    }
+
+    const SOURCE_STYLE = {
+      auto: { label: 'Auto', color: 'var(--emerald)' },
+      api: { label: 'API', color: 'var(--indigo)' },
+      'on-demand': { label: 'On-Demand', color: 'var(--amber)' },
+    };
+    function getBillingSource(e) {
+      try {
+        const raw = e.rawJson ? JSON.parse(e.rawJson) : {};
+        if (raw.usageBasedCosts && parseFloat(raw.usageBasedCosts) > 0) return 'on-demand';
+        if (raw.requestsCosts != null && raw.requestsCosts > 0) return 'auto';
+        if (raw.isTokenBasedCall) return 'api';
+        if (e.chargedCents > 0 && (e.requestsCosts == null || e.requestsCosts === 0)) return 'api';
+      } catch (_) { }
+      return 'auto';
+    }
+    function sourceHtml(src) {
+      const s = SOURCE_STYLE[src] || SOURCE_STYLE.auto;
+      return `<span style="color:${s.color};font-size:11px;font-weight:500">${s.label}</span>`;
+    }
+
+    /* ═══ Rendering ═══ */
+    function renderKPI(data) {
+      const ev = data.billing && data.billing.events;
+      const p = data.billing && data.billing.period;
+      const el = id => document.getElementById(id);
+
+      el('kv-cost').textContent = ev ? fmtUsd(ev.chargedCents) : '-';
+      el('ks-cost').textContent = p && p.limitCents != null ? '限额 ' + fmtUsd(p.limitCents) : '';
+
+      if (ev) {
+        const total = (ev.inputTokens || 0) + (ev.outputTokens || 0);
+        el('kv-tokens').textContent = fmtTok(total);
+        el('ks-tokens').textContent = `in ${fmtTok(ev.inputTokens)} / out ${fmtTok(ev.outputTokens)}`;
+        const cache = (ev.cacheReadTokens || 0) + (ev.cacheWriteTokens || 0);
+        el('kv-cache').textContent = fmtTok(cache);
+        el('ks-cache').textContent = `read ${fmtTok(ev.cacheReadTokens)} / write ${fmtTok(ev.cacheWriteTokens)}`;
+      }
+
+      const autoPct = p && p.autoPercent;
+      const apiPct = p && p.apiPercent;
+      el('kv-auto').textContent = autoPct != null ? fmtPct(autoPct) : '-';
+      el('kv-api').textContent = apiPct != null ? fmtPct(apiPct) : '-';
+      el('bar-auto').style.width = autoPct != null ? Math.min(autoPct, 100) + '%' : '0';
+      el('bar-api').style.width = apiPct != null ? Math.min(apiPct, 100) + '%' : '0';
+    }
+
+    function renderPeriodText(data) {
+      const p = data.billing && data.billing.period;
+      const el = document.getElementById('periodText');
+      if (p && p.billingCycleStart && p.billingCycleEnd) {
+        const fmt = ts => new Date(ts).toLocaleDateString();
+        const plan = p.membershipType ? ` · ${p.membershipType}` : '';
+        el.textContent = `${fmt(p.billingCycleStart)} — ${fmt(p.billingCycleEnd)}${plan}`;
+      } else {
+        el.textContent = ({ day: '今日', month: '本月', year: '本年' })[data.view] || '';
+      }
+    }
+
+    function renderMainChart(data) {
+      const events = (data.billing && data.billing.events && data.billing.events.recent) || [];
+      const byModel = (data.billing && data.billing.events && data.billing.events.byModel) || [];
+      const view = data.view;
+      const labels = allLabels(view, data.rangeStart);
+      const models = byModel.map(m => m.model);
+      const tc = themeColors();
+
+      if (chartType === 'pie') {
+        const pieData = byModel.map((m, i) => ({
+          name: shortModel(m.model), value: m.count,
+          itemStyle: { color: getModelColor(m.model, i) }
+        }));
+        mainChart.setOption({
+          backgroundColor: 'transparent',
+          tooltip: {
+            trigger: 'item', formatter: '{b}: {c} ({d}%)',
+            backgroundColor: tc.tipBg, borderColor: tc.tipBorder,
+            textStyle: { color: tc.tipText, fontSize: 12 }
+          },
+          legend: { show: false },
+          series: [{
+            type: 'pie', radius: ['38%', '68%'], center: ['50%', '50%'],
+            avoidLabelOverlap: true,
+            itemStyle: { borderRadius: 6, borderColor: tc.card, borderWidth: 2 },
+            label: {
+              show: true, position: 'outside',
+              color: tc.legend, fontSize: 11,
+              formatter: '{b}\n{d}%'
+            },
+            labelLine: { lineStyle: { color: tc.grid } },
+            emphasis: {
+              label: { fontSize: 13, fontWeight: 600 },
+              itemStyle: { shadowBlur: 16, shadowColor: 'rgba(0,0,0,0.2)' }
+            },
+            data: pieData
+          }]
+        }, true);
+        return;
+      }
+
+      const bucketMap = new Map();
+      events.forEach(e => {
+        const lbl = bucketLabel(e.timestamp, view);
+        const key = `${lbl}|${e.model}`;
+        bucketMap.set(key, (bucketMap.get(key) || 0) + 1);
+      });
+
+      const series = models.map((model, i) => ({
+        name: shortModel(model),
+        type: chartType,
+        stack: chartType === 'bar' ? 'total' : undefined,
+        smooth: chartType === 'line' ? 0.3 : undefined,
+        symbol: chartType === 'line' ? 'circle' : undefined,
+        symbolSize: chartType === 'line' ? 4 : undefined,
+        lineStyle: chartType === 'line' ? { width: 2 } : undefined,
+        emphasis: { focus: 'series' },
+        itemStyle: { color: getModelColor(model, i), borderRadius: chartType === 'bar' ? [2, 2, 0, 0] : undefined },
+        areaStyle: chartType === 'line' ? { opacity: 0.06 } : undefined,
+        data: labels.map(lbl => bucketMap.get(`${lbl}|${model}`) || 0)
+      }));
+
+      mainChart.setOption({
+        backgroundColor: 'transparent',
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: tc.tipBg, borderColor: tc.tipBorder,
+          textStyle: { color: tc.tipText, fontSize: 12 }
+        },
+        legend: { show: false },
+        grid: { left: 46, right: 16, top: 16, bottom: 36 },
+        xAxis: {
+          type: 'category', data: labels,
+          name: ({ day: '时', month: '日', year: '月' })[view] || '',
+          nameTextStyle: { color: tc.axis, fontSize: 11 },
+          axisLabel: { color: tc.axis, fontSize: 10 },
+          axisLine: { lineStyle: { color: tc.grid } },
+          axisTick: { show: false }
+        },
+        yAxis: {
+          type: 'value', minInterval: 1,
+          axisLabel: { color: tc.axis, fontSize: 10 },
+          splitLine: { lineStyle: { color: tc.grid } },
+          axisLine: { show: false }, axisTick: { show: false }
+        },
+        series
+      }, true);
+    }
+
+    function renderCategoryBars(data) {
+      let agentCount = 0, tabCount = 0;
+      (data.pie || []).forEach(p => {
+        if (p.name === 'chat' || p.name === 'agent') agentCount += p.value;
+        else if (p.name === 'tab') tabCount = p.value;
+      });
+      const total = agentCount + tabCount || 1;
+      const agentPct = agentCount / total * 100;
+      const tabPct = tabCount / total * 100;
+      document.getElementById('cc-agent').textContent = agentCount.toLocaleString();
+      document.getElementById('cp-agent').textContent = agentPct.toFixed(1) + '%';
+      document.getElementById('cb-agent').style.width = agentPct + '%';
+      document.getElementById('cc-tab').textContent = tabCount.toLocaleString();
+      document.getElementById('cp-tab').textContent = tabPct.toFixed(1) + '%';
+      document.getElementById('cb-tab').style.width = tabPct + '%';
+    }
+
+    function renderModelTable(data) {
+      const byModel = (data.billing && data.billing.events && data.billing.events.byModel) || [];
+      const tbody = document.getElementById('modelBody');
+      tbody.innerHTML = '';
+      if (!byModel.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted)">暂无模型数据</td></tr>';
+        return;
+      }
+      let totals = { count: 0, inp: 0, out: 0, cr: 0, cw: 0, cost: 0 };
+      byModel.forEach((m, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          `<td><span class="model-dot" style="background:${getModelColor(m.model, i)}"></span><span class="model-name">${shortModel(m.model)}</span></td>` +
+          `<td class="num">${m.count}</td>` +
+          `<td class="num">${fmtTok(m.inputTokens)}</td><td class="num">${fmtTok(m.outputTokens)}</td>` +
+          `<td class="num">${fmtTok(m.cacheReadTokens)}</td><td class="num">${fmtTok(m.cacheWriteTokens)}</td>` +
+          `<td class="num">${fmtUsd(m.chargedCents)}</td>`;
+        tbody.appendChild(tr);
+        totals.count += m.count; totals.inp += m.inputTokens || 0; totals.out += m.outputTokens || 0;
+        totals.cr += m.cacheReadTokens || 0; totals.cw += m.cacheWriteTokens || 0; totals.cost += m.chargedCents || 0;
+      });
+      const tr = document.createElement('tr');
+      tr.className = 'total-row';
+      tr.innerHTML =
+        `<td>合计</td><td class="num">${totals.count}</td>` +
+        `<td class="num">${fmtTok(totals.inp)}</td><td class="num">${fmtTok(totals.out)}</td>` +
+        `<td class="num">${fmtTok(totals.cr)}</td><td class="num">${fmtTok(totals.cw)}</td>` +
+        `<td class="num">${fmtUsd(totals.cost)}</td>`;
+      tbody.appendChild(tr);
+    }
+
+    function renderEventsTable(data) {
+      const events = (data.billing && data.billing.events && data.billing.events.recent) || [];
+      const tbody = document.getElementById('eventsBody');
+      tbody.innerHTML = '';
+      document.getElementById('eventDetail').classList.remove('visible');
+
+      if (!events.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted)">暂无调用记录</td></tr>';
+        return;
+      }
+
+      const byModel = (data.billing && data.billing.events && data.billing.events.byModel) || [];
+      const modelIdx = {};
+      byModel.forEach((m, i) => { modelIdx[m.model] = i; });
+
+      events.forEach((e, rowIdx) => {
+        const tr = document.createElement('tr');
+        const ci = e.model in modelIdx ? modelIdx[e.model] : 0;
+        const src = getBillingSource(e);
+        tr.innerHTML =
+          `<td style="color:var(--muted)">${fmtTime(e.timestamp)}</td>` +
+          `<td><span class="model-dot" style="background:${getModelColor(e.model, ci)}"></span>${shortModel(e.model)}</td>` +
+          `<td>${sourceHtml(src)}</td>` +
+          `<td class="num">${fmtTok(e.inputTokens)}</td><td class="num">${fmtTok(e.outputTokens)}</td>` +
+          `<td class="num">${fmtTok(e.cacheReadTokens)}</td><td class="num">${fmtTok(e.cacheWriteTokens)}</td>` +
+          `<td class="num">${fmtUsd(e.chargedCents)}</td>`;
+        tr.addEventListener('click', () => {
+          tbody.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+          tr.classList.add('selected');
+          showEventDetail(e, ci, src);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function showEventDetail(e, ci, src) {
+      const detail = document.getElementById('eventDetail');
+      detail.classList.add('visible');
+      if (!src) src = getBillingSource(e);
+      const items = [
+        ['模型', `<span class="model-dot" style="background:${getModelColor(e.model, ci)}"></span>${shortModel(e.model)}`],
+        ['来源', sourceHtml(src)],
+        ['时间', fmtTime(e.timestamp)],
+        ['Input', fmtTok(e.inputTokens)],
+        ['Output', fmtTok(e.outputTokens)],
+        ['Cache Read', fmtTok(e.cacheReadTokens)],
+        ['Cache Write', fmtTok(e.cacheWriteTokens)],
+        ['费用', fmtUsd(e.chargedCents)],
+      ];
+      if (e.conversationId) items.push(['Conv', e.conversationId]);
+      detail.innerHTML = items.map(([label, val]) =>
+        `<div class="detail-item"><span class="detail-label">${label}</span><span class="detail-val">${val}</span></div>`
+      ).join('');
+    }
+
+    function renderAll(data) {
+      document.getElementById('app').classList.remove('loading');
+      document.getElementById('errorBar').style.display = 'none';
+      cachedData = data;
+      renderKPI(data);
+      renderPeriodText(data);
+      renderMainChart(data);
+      renderCategoryBars(data);
+      renderModelTable(data);
+      renderEventsTable(data);
+    }
+
+    /* ═══ Event Handlers ═══ */
+    document.getElementById('viewTabs').addEventListener('click', e => {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn || btn.classList.contains('active')) return;
+      document.querySelectorAll('#viewTabs .tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentView = btn.dataset.view;
+      if (typeof vscodeApi !== 'undefined') {
+        vscodeApi.postMessage({ type: 'setView', view: currentView });
+      } else {
+        renderAll(generateMockData(currentView));
+      }
+    });
+
+    document.getElementById('chartTypeTabs').addEventListener('click', e => {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn || btn.classList.contains('active')) return;
+      document.querySelectorAll('#chartTypeTabs .tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      chartType = btn.dataset.chart;
+      if (cachedData) renderMainChart(cachedData);
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      if (typeof vscodeApi !== 'undefined') {
+        vscodeApi.postMessage({ type: 'refresh' });
+      } else {
+        renderAll(generateMockData(currentView));
+      }
+    });
+
+    window.addEventListener('resize', () => { mainChart && mainChart.resize(); });
+
+    /* ═══ Theme change observer ═══ */
+    new MutationObserver(() => {
+      if (cachedData) renderMainChart(cachedData);
+    }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    /* ═══ Mock Data ═══ */
+    function generateMockData(view) {
+      const { start, end } = getRange(view);
+      const now = Date.now();
+      const models = [
+        { name: 'claude-sonnet-4-20250514', weight: 35, avgIn: 12000, avgOut: 4000 },
+        { name: 'gpt-4o', weight: 20, avgIn: 8000, avgOut: 3000 },
+        { name: 'claude-3.5-sonnet', weight: 15, avgIn: 10000, avgOut: 3500 },
+        { name: 'gemini-2.0-flash', weight: 12, avgIn: 5000, avgOut: 1500 },
+        { name: 'cursor-small', weight: 10, avgIn: 3000, avgOut: 800 },
+        { name: 'gpt-4o-mini', weight: 8, avgIn: 4000, avgOut: 1200 },
+      ];
+      const totalWeight = models.reduce((s, m) => s + m.weight, 0);
+      function pickModel() { let r = Math.random() * totalWeight; for (const m of models) { r -= m.weight; if (r <= 0) return m; } return models[0]; }
+      function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+      const evtCount = view === 'day' ? 60 : view === 'month' ? 250 : 800;
+      const events = [];
+      for (let i = 0; i < evtCount; i++) {
+        const ts = start + Math.random() * (Math.min(end, now) - start);
+        const h = new Date(ts).getHours();
+        if ((h < 7 || h > 23) && Math.random() > 0.12) continue;
+        const m = pickModel();
+        const inTok = Math.round(m.avgIn * (0.3 + Math.random() * 1.4));
+        const outTok = Math.round(m.avgOut * (0.2 + Math.random() * 1.6));
+        const cr = Math.random() > 0.25 ? Math.round(inTok * (0.5 + Math.random() * 2)) : 0;
+        const cw = Math.random() > 0.65 ? Math.round(outTok * (0.1 + Math.random() * 0.4)) : 0;
+        const cost = Math.max(0.1, Math.round((inTok * 0.003 + outTok * 0.015 - cr * 0.001) * 100) / 100);
+        const srcRoll = Math.random();
+        const mockRaw = srcRoll < 0.55
+          ? JSON.stringify({ requestsCosts: cost })
+          : srcRoll < 0.85
+            ? JSON.stringify({ isTokenBasedCall: true })
+            : JSON.stringify({ usageBasedCosts: String(cost) });
+        events.push({
+          eventKey: 'e' + i, timestamp: Math.round(ts), model: m.name, kind: null,
+          inputTokens: inTok, outputTokens: outTok, cacheReadTokens: cr, cacheWriteTokens: cw,
+          totalCents: cost, chargedCents: cost, requestsCosts: null,
+          conversationId: 'conv-' + randInt(1, 40), rawJson: mockRaw
+        });
+      }
+      events.sort((a, b) => b.timestamp - a.timestamp);
+
+      const byModelMap = {};
+      events.forEach(e => {
+        if (!byModelMap[e.model]) byModelMap[e.model] = { model: e.model, count: 0, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, chargedCents: 0 };
+        const m = byModelMap[e.model];
+        m.count++; m.inputTokens += e.inputTokens; m.outputTokens += e.outputTokens;
+        m.cacheReadTokens += e.cacheReadTokens; m.cacheWriteTokens += e.cacheWriteTokens; m.chargedCents += e.chargedCents;
+      });
+
+      const pie = [
+        { name: 'agent', value: Math.round(events.length * 0.85 * (0.9 + Math.random() * 0.2)) },
+        { name: 'tab', value: Math.round(events.length * 0.15 * (0.8 + Math.random() * 0.4)) }
+      ];
+      const labels = allLabels(view, start);
+      const buckets = [];
+      for (const label of labels) for (const cat of ['agent', 'tab'])
+        buckets.push({ label, category: cat, count: randInt(0, view === 'day' ? 12 : view === 'month' ? 30 : 150) });
+
+      return {
+        view, aiOnly: true, buckets, pie,
+        kpi: { total: events.length, dailyAvg: Math.round(events.length / 14 * 10) / 10, peakLabel: '-', peakCount: 0 },
+        rangeStart: start, rangeEnd: end,
+        billing: {
+          period: {
+            fetchedAt: now, source: 'mock', rawJson: '{}',
+            billingCycleStart: new Date(2026, 6, 1).getTime(), billingCycleEnd: new Date(2026, 6, 31).getTime(),
+            membershipType: 'pro', totalSpendCents: 4250, includedSpendCents: 4250, bonusSpendCents: 0,
+            limitCents: 50000, remainingCents: 45750, autoPercent: 62.3, apiPercent: 37.7, totalPercent: 8.5,
+            displayMessage: null, planMessage: null, apiMessage: null
+          },
+          events: {
+            count: events.length,
+            inputTokens: events.reduce((s, e) => s + e.inputTokens, 0),
+            outputTokens: events.reduce((s, e) => s + e.outputTokens, 0),
+            cacheReadTokens: events.reduce((s, e) => s + e.cacheReadTokens, 0),
+            cacheWriteTokens: events.reduce((s, e) => s + e.cacheWriteTokens, 0),
+            chargedCents: events.reduce((s, e) => s + e.chargedCents, 0),
+            byModel: Object.values(byModelMap).sort((a, b) => b.count - a.count),
+            recent: events
+          }
+        }
+      };
+    }
+
+    /* ═══ Init ═══ */
+    function init() {
+      mainChart = echarts.init(document.getElementById('mainChart'));
+      if (typeof acquireVsCodeApi === 'function') {
+        window.vscodeApi = acquireVsCodeApi();
+        window.addEventListener('message', ev => {
+          const msg = ev.data;
+          if (msg.type === 'data') {
+            renderAll(msg.payload);
+            if (msg.syncNote) document.getElementById('syncNote').textContent = msg.syncNote;
+          } else if (msg.type === 'syncing') {
+            document.getElementById('syncNote').textContent = msg.value ? '同步中…' : '';
+          } else if (msg.type === 'error') {
+            const el = document.getElementById('errorBar');
+            el.style.display = 'block';
+            el.textContent = msg.message;
+          }
+        });
+        vscodeApi.postMessage({ type: 'ready' });
+      } else {
+        renderAll(generateMockData(currentView));
+      }
+    }
+
+    if (typeof echarts !== 'undefined') init();
+    else window.addEventListener('load', init);
+  </script>
+</body>
+
+</html>

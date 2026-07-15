@@ -1,0 +1,77 @@
+{
+  "name": "cursor-usage-tracker",
+  "displayName": "Cursor Usage Tracker",
+  "description": "Track Cursor AI request usage with day/week/month/year charts",
+  "version": "0.1.0",
+  "publisher": "cursor-usage",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cursorUsage.installHook",
+        "title": "CursorUsage: Install Hook"
+      },
+      {
+        "command": "cursorUsage.uninstallHook",
+        "title": "CursorUsage: Uninstall Hook"
+      },
+      {
+        "command": "cursorUsage.showDashboard",
+        "title": "CursorUsage: Show Dashboard"
+      },
+      {
+        "command": "cursorUsage.syncBilling",
+        "title": "CursorUsage: Sync Billing (auto)"
+      },
+      {
+        "command": "cursorUsage.exportData",
+        "title": "CursorUsage: Export Data"
+      },
+      {
+        "command": "cursorUsage.checkHookStatus",
+        "title": "CursorUsage: Check Hook Status"
+      },
+      {
+        "command": "cursorUsage.enableDetailLogging",
+        "title": "CursorUsage: Enable Detail Logging"
+      },
+      {
+        "command": "cursorUsage.disableDetailLogging",
+        "title": "CursorUsage: Disable Detail Logging"
+      },
+      {
+        "command": "cursorUsage.openDetailLog",
+        "title": "CursorUsage: Open Request Detail Log"
+      },
+      {
+        "command": "cursorUsage.openTokensLog",
+        "title": "CursorUsage: Open Tokens Log"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "npm run build && vsce package --no-dependencies",
+    "preview": "node preview/serve.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/sql.js": "^1.4.9",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "sql.js": "^1.12.0"
+  }
+}
