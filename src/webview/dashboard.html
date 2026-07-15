@@ -972,6 +972,17 @@
 
     function renderCategoryBars(data) {
       const KIND_COLORS = ['#34D399', '#FBBF24', '#818CF8', '#FB7185', '#22D3EE', '#A78BFA', '#F97316', '#14B8A6'];
+      const KIND_LABELS = {
+        'USAGE_EVENT_KIND_INCLUDED_IN_PRO': '套餐内使用',
+        'USAGE_EVENT_KIND_FREE_CREDIT': '免费额度',
+        'USAGE_EVENT_KIND_ERRORED_NOT_CHARGED': '错误未计费',
+        'USAGE_EVENT_KIND_USAGE_BASED': '按量计费',
+        'USAGE_EVENT_KIND_USER_API_KEY': '用户 API Key',
+        'USAGE_EVENT_KIND_BONUS': '额外赠送',
+        'USAGE_EVENT_KIND_TRIAL': '试用额度',
+        'unknown': '未知类型'
+      };
+
       const byKind = (data.billing && data.billing.events && data.billing.events.byKind) || [];
       const list = document.getElementById('catList');
       if (!byKind.length) {
@@ -982,7 +993,8 @@
       list.innerHTML = byKind.map((item, index) => {
         const pct = (item.count / total) * 100;
         const color = KIND_COLORS[index % KIND_COLORS.length];
-        const label = item.kind || 'unknown';
+        const rawKind = item.kind || 'unknown';
+        const label = KIND_LABELS[rawKind] || rawKind;
         return (
           '<div class="cat-item">' +
           '<div class="cat-meta">' +
