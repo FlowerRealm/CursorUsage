@@ -824,22 +824,30 @@
     }
 
     const SOURCE_STYLE = {
-      auto: { label: 'Auto', color: 'var(--emerald)' },
-      api: { label: 'API', color: 'var(--indigo)' },
+      auto: { label: 'Included', color: 'var(--emerald)' },
       'on-demand': { label: 'On-Demand', color: 'var(--amber)' },
+      byok: { label: 'BYOK', color: 'var(--violet)' },
+      free: { label: 'Free', color: 'var(--cyan)' },
+      unknown: { label: 'Unknown', color: 'var(--muted)' },
     };
     function getBillingSource(e) {
       try {
         const raw = e.rawJson ? JSON.parse(e.rawJson) : {};
-        if (raw.usageBasedCosts && parseFloat(raw.usageBasedCosts) > 0) return 'on-demand';
+        const kind = raw.kind || e.kind || '';
+
+        if (kind === 'USAGE_EVENT_KIND_ERRORED_NOT_CHARGED') return 'free';
+        if (kind === 'USAGE_EVENT_KIND_FREE_CREDIT') return 'free';
+        if (kind === 'USAGE_EVENT_KIND_USAGE_BASED') return 'on-demand';
+        if (kind === 'USAGE_EVENT_KIND_INCLUDED_IN_PRO') return 'auto';
+        if (kind === 'USAGE_EVENT_KIND_USER_API_KEY') return 'byok';
+
+        if (raw.usageBasedCosts && raw.usageBasedCosts !== '-') return 'on-demand';
         if (raw.requestsCosts != null && raw.requestsCosts > 0) return 'auto';
-        if (raw.isTokenBasedCall) return 'api';
-        if (e.chargedCents > 0 && (e.requestsCosts == null || e.requestsCosts === 0)) return 'api';
       } catch (_) { }
-      return 'auto';
+      return 'unknown';
     }
     function sourceHtml(src) {
-      const s = SOURCE_STYLE[src] || SOURCE_STYLE.auto;
+      const s = SOURCE_STYLE[src] || SOURCE_STYLE.unknown;
       return `<span style="color:${s.color};font-size:11px;font-weight:500">${s.label}</span>`;
     }
 
