@@ -47,6 +47,39 @@ All data lives under `~/.cursor-usage-tracker/`:
 | `logs/usage-tokens.jsonl` | Last sync's full tokenUsage dump |
 | `tmp/` | Temporary files for atomic writes |
 
+## Package (VSIX)
+
+```bash
+npm install
+npm run package
+```
+
+This typechecks, builds with esbuild, and produces `cursor-usage-tracker-<version>.vsix`.
+
+Install locally:
+
+```bash
+# Cursor / VS Code CLI
+cursor --install-extension cursor-usage-tracker-*.vsix
+# or
+code --install-extension cursor-usage-tracker-*.vsix
+```
+
+Or use **Extensions: Install from VSIX…** in the command palette.
+
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on push / PR to `main` or `master`:
+
+1. `npm ci`
+2. Typecheck
+3. Package VSIX
+4. Upload artifact `cursor-usage-tracker` (`cursor-usage-tracker.vsix`)
+
+Pushing a tag `v*` (e.g. `v0.2.0`) also creates a GitHub Release with the VSIX attached.
+
+Manual run: **Actions → CI → Run workflow**.
+
 ## Preview dashboard (browser)
 
 ```bash

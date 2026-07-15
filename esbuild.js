@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const watch = process.argv.includes('--watch');
+const production = process.argv.includes('--production') || process.env.NODE_ENV === 'production';
 
 async function copyAssets() {
   const distDir = path.join(__dirname, 'dist');
@@ -20,8 +21,8 @@ const buildOptions = {
   format: 'cjs',
   platform: 'node',
   target: 'node18',
-  sourcemap: true,
-  minify: false
+  sourcemap: !production,
+  minify: production
 };
 
 async function main() {
@@ -33,7 +34,7 @@ async function main() {
     console.log('[cursor-usage] watching…');
   } else {
     await esbuild.build(buildOptions);
-    console.log('[cursor-usage] build complete');
+    console.log(`[cursor-usage] build complete${production ? ' (production)' : ''}`);
   }
 }
 

@@ -1,11 +1,18 @@
-src/**
-node_modules/**
-tsconfig.json
-esbuild.js
-.git/**
+.github/**
 .vscode/**
+.git/**
+node_modules/**
+src/**
+preview/**
 **/*.ts
 **/*.map
-!dist/**
+**/*.vsix
+.gitignore
+.vscodeignore
+esbuild.js
+tsconfig.json
+package-lock.json
+
+# Only ship compiled extension entry + webview asset
 !dist/dashboard.html
 !dist/extension.js
