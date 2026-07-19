@@ -124,6 +124,37 @@
       gap: 12px;
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .header-logo-light {
+      display: none;
+    }
+
+    body.vscode-light .header-logo-dark {
+      display: none;
+    }
+
+    body.vscode-light .header-logo-light {
+      display: block;
+    }
+
     .header-left h1 {
       font-size: 20px;
       font-weight: 700;
@@ -133,7 +164,6 @@
     .header-left .period {
       font-size: 12px;
       color: var(--muted);
-      margin-top: 2px;
     }
 
     .header-right {
@@ -612,8 +642,12 @@
 
     <header class="header">
       <div class="header-left">
-        <h1>Cursor Usage</h1>
-        <div class="period" id="periodText">加载中…</div>
+        <img class="header-logo header-logo-dark" src="{{ICON_DARK}}" alt="" width="36" height="36" />
+        <img class="header-logo header-logo-light" src="{{ICON_LIGHT}}" alt="" width="36" height="36" />
+        <div class="header-brand">
+          <h1>Cursor Usage</h1>
+          <div class="period" id="periodText">加载中…</div>
+        </div>
       </div>
       <div class="header-right">
         <div class="tab-group" id="viewTabs">

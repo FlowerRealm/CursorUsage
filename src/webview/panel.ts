@@ -47,9 +47,16 @@ export class DashboardPanel {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'dist')]
+        localResourceRoots: [
+          vscode.Uri.joinPath(extensionUri, 'dist'),
+          vscode.Uri.joinPath(extensionUri, 'icons')
+        ]
       }
     );
+    panel.iconPath = {
+      light: vscode.Uri.joinPath(extensionUri, 'icons', 'icon-light.svg'),
+      dark: vscode.Uri.joinPath(extensionUri, 'icons', 'icon-dark.svg')
+    };
 
     DashboardPanel.currentPanel = new DashboardPanel(panel, extensionUri);
     return DashboardPanel.currentPanel;
@@ -117,7 +124,16 @@ export class DashboardPanel {
       `font-src ${cspSource} https: data:`,
       `connect-src https://cdn.jsdelivr.net`
     ].join('; ');
-    html = html.replace('{{CSP}}', csp);
+    const iconDark = this.panel.webview.asWebviewUri(
+      vscode.Uri.joinPath(extensionUri, 'icons', 'icon-dark.svg')
+    );
+    const iconLight = this.panel.webview.asWebviewUri(
+      vscode.Uri.joinPath(extensionUri, 'icons', 'icon-light.svg')
+    );
+    html = html
+      .replace('{{CSP}}', csp)
+      .replace(/\{\{ICON_DARK\}\}/g, iconDark.toString())
+      .replace(/\{\{ICON_LIGHT\}\}/g, iconLight.toString());
     return html;
   }
 
