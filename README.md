@@ -76,9 +76,24 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push / PR to `main` or `mast
 3. Package VSIX
 4. Upload artifact `cursor-usage-tracker` (`cursor-usage-tracker.vsix`)
 
-Pushing a tag `v*` (e.g. `v0.2.0`) also creates a GitHub Release with the VSIX attached.
+Pushing a tag `v*` (e.g. `v0.2.2`) also:
 
-Manual run: **Actions → CI → Run workflow**.
+1. Creates a GitHub Release with the VSIX attached
+2. Publishes the same VSIX to [Open VSX](https://open-vsx.org) (Cursor marketplace mirror)
+
+### One-time Open VSX setup
+
+1. Sign in at [open-vsx.org](https://open-vsx.org) (GitHub / Eclipse account)
+2. Create an access token: [User Settings → Tokens](https://open-vsx.org/user-settings/tokens)
+3. Add it as a repo secret:
+
+```bash
+gh secret set OVSX_PAT
+```
+
+Publisher namespace must match `package.json` → `publisher` (`cursor-usage`). CI creates the namespace on first publish if needed.
+
+Manual publish without a new tag: **Actions → CI → Run workflow** → enable **Also publish… to Open VSX**.
 
 ## Preview dashboard (browser)
 
