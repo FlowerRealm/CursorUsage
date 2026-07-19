@@ -18,7 +18,8 @@ import {
 import { TOKENS_LOG_FILE, TOKENS_TMP_FILE, ensureDataDir } from '../paths';
 import { logSync } from '../log';
 
-const LOCAL_CACHE_TTL_MS = 30 * 60 * 1000;
+/** Soft sync (panel open) skips network if a fetch happened within this window. */
+const LOCAL_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export interface BillingSyncResult {
   ok: boolean;

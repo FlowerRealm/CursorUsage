@@ -21,7 +21,9 @@ async function runBackgroundSync(): Promise<void> {
   }
   backgroundSyncing = true;
   try {
-    const result = await syncBilling(false, 'background');
+    // Background must bypass local TTL — otherwise a 5-minute timer
+    // is a no-op against the cache and the DB never warms.
+    const result = await syncBilling(true, 'background');
     if (result.ok && DashboardPanel.currentPanel) {
       const bits = [
         `Billing: ${result.source}`,
