@@ -54,8 +54,8 @@ export class DashboardPanel {
       }
     );
     panel.iconPath = {
-      light: vscode.Uri.joinPath(extensionUri, 'icons', 'icon-light.svg'),
-      dark: vscode.Uri.joinPath(extensionUri, 'icons', 'icon-dark.svg')
+      light: vscode.Uri.joinPath(extensionUri, 'icons', 'icon-light.png'),
+      dark: vscode.Uri.joinPath(extensionUri, 'icons', 'icon-dark.png')
     };
 
     DashboardPanel.currentPanel = new DashboardPanel(panel, extensionUri);
@@ -125,10 +125,10 @@ export class DashboardPanel {
       `connect-src https://cdn.jsdelivr.net`
     ].join('; ');
     const iconDark = this.panel.webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, 'icons', 'icon-dark.svg')
+      vscode.Uri.joinPath(extensionUri, 'icons', 'icon-dark.png')
     );
     const iconLight = this.panel.webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, 'icons', 'icon-light.svg')
+      vscode.Uri.joinPath(extensionUri, 'icons', 'icon-light.png')
     );
     html = html
       .replace('{{CSP}}', csp)
