@@ -83,7 +83,7 @@ export class DashboardPanel {
     this.syncing = true;
     this.panel.webview.postMessage({ type: 'syncing', value: true });
     try {
-      const result = await syncBilling(forceRefresh);
+      const result = await syncBilling(forceRefresh, 'panel');
       let note = '';
       if (result.ok) {
         note = `Billing: ${result.source}`;

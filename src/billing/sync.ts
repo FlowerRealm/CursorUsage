@@ -16,6 +16,7 @@ import {
   UsageEventRow
 } from '../storage/database';
 import { TOKENS_LOG_FILE, TOKENS_TMP_FILE, ensureDataDir } from '../paths';
+import { logSync } from '../log';
 
 const LOCAL_CACHE_TTL_MS = 30 * 60 * 1000;
 
@@ -146,24 +147,33 @@ async function fetchPeriod(
  * Merges events (never deletes) so multi-account history can coexist.
  *
  * @param forceRefresh Skip local cache and re-fetch from upstream.
+ * @param trigger Who started the sync (for Output log).
  */
-export async function syncBilling(forceRefresh = false): Promise<BillingSyncResult> {
+export async function syncBilling(
+  forceRefresh = false,
+  trigger = 'sync'
+): Promise<BillingSyncResult> {
   const warnings: string[] = [];
+  logSync(`start trigger=${trigger} force=${forceRefresh}`);
+
   let credentials: CursorCredentials;
   try {
     credentials = await loadCursorCredentials();
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logSync(`fail trigger=${trigger} credentials: ${message}`);
     return {
       ok: false,
       source: 'none',
       eventsImported: 0,
-      error: error instanceof Error ? error.message : String(error),
+      error: message,
       warnings
     };
   }
 
   const membership = credentials.membershipType;
   const userId = credentials.userId;
+  logSync(`auth user=${userId}${membership ? ` plan=${membership}` : ''}`);
 
   if (!forceRefresh) {
     const cached = getLatestBillingPeriod();
@@ -172,6 +182,8 @@ export async function syncBilling(forceRefresh = false): Promise<BillingSyncResu
       cached.userId === userId &&
       Date.now() - cached.fetchedAt < LOCAL_CACHE_TTL_MS
     ) {
+      const ageSec = Math.round((Date.now() - cached.fetchedAt) / 1000);
+      logSync(`cache-hit source=local:${cached.source} age=${ageSec}s`);
       return {
         ok: true,
         source: `local:${cached.source}`,
@@ -183,8 +195,13 @@ export async function syncBilling(forceRefresh = false): Promise<BillingSyncResu
     }
   }
 
+  logSync('fetch period…');
   const fetched = await fetchPeriod(credentials, warnings);
   if (!fetched) {
+    for (const warning of warnings) {
+      logSync(`warn ${warning}`);
+    }
+    logSync(`fail trigger=${trigger} Could not load period usage from official APIs`);
     return {
       ok: false,
       source: 'none',
@@ -194,6 +211,7 @@ export async function syncBilling(forceRefresh = false): Promise<BillingSyncResu
     };
   }
 
+  logSync(`period source=${fetched.source}`);
   const periodRow = toPeriodRow(fetched.period, fetched.source, userId, membership);
   upsertBillingPeriod(periodRow);
 
@@ -203,6 +221,7 @@ export async function syncBilling(forceRefresh = false): Promise<BillingSyncResu
     const startDate = periodRow.billingCycleStart
       ? String(periodRow.billingCycleStart)
       : undefined;
+    logSync('fetch usage events…');
     const { total, events } = await fetchAllUsageEvents(credentials, {
       pageSize: 200,
       maxPages: 15,
@@ -210,6 +229,7 @@ export async function syncBilling(forceRefresh = false): Promise<BillingSyncResu
     });
     eventsTotal = total;
     eventsImported = mergeUsageEvents(toEventRows(events));
+    logSync(`events fetched=${events.length} total=${total} imported=${eventsImported}`);
     try {
       writeTokensLog(events);
     } catch (error) {
@@ -218,6 +238,14 @@ export async function syncBilling(forceRefresh = false): Promise<BillingSyncResu
   } catch (error) {
     warnings.push(`usage-events: ${error instanceof Error ? error.message : String(error)}`);
   }
+
+  for (const warning of warnings) {
+    logSync(`warn ${warning}`);
+  }
+  logSync(
+    `ok trigger=${trigger} source=${fetched.source} imported=${eventsImported}` +
+    (eventsTotal != null ? ` total=${eventsTotal}` : '')
+  );
 
   return {
     ok: true,

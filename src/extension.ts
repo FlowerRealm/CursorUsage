@@ -7,11 +7,60 @@ import { initDatabase, closeDatabase, getTotalEventCount } from './storage/datab
 import { exportCsv } from './analytics/aggregator';
 import { DashboardPanel } from './webview/panel';
 import { syncBilling } from './billing/sync';
+import { initLog, logSync } from './log';
+
+const BACKGROUND_SYNC_INTERVAL_MS = 5 * 60 * 1000;
+
+let backgroundSyncTimer: ReturnType<typeof setInterval> | undefined;
+let backgroundSyncing = false;
+
+async function runBackgroundSync(): Promise<void> {
+  if (backgroundSyncing) {
+    logSync('skip background: already running');
+    return;
+  }
+  backgroundSyncing = true;
+  try {
+    const result = await syncBilling(false, 'background');
+    if (result.ok && DashboardPanel.currentPanel) {
+      const bits = [
+        `Billing: ${result.source}`,
+        result.eventsImported ? `${result.eventsImported} events` : null,
+        result.planHint || null
+      ].filter(Boolean);
+      DashboardPanel.currentPanel.pushData(bits.join(' · '));
+    }
+  } catch (error) {
+    logSync(`fail background: ${error instanceof Error ? error.message : String(error)}`);
+  } finally {
+    backgroundSyncing = false;
+  }
+}
+
+function startBackgroundSync(): void {
+  void runBackgroundSync();
+  backgroundSyncTimer = setInterval(() => {
+    void runBackgroundSync();
+  }, BACKGROUND_SYNC_INTERVAL_MS);
+  backgroundSyncTimer.unref?.();
+}
+
+function stopBackgroundSync(): void {
+  if (backgroundSyncTimer) {
+    clearInterval(backgroundSyncTimer);
+    backgroundSyncTimer = undefined;
+  }
+}
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   ensureDataDir();
   migrateLegacyFiles();
   await initDatabase(context.extensionPath);
+  initLog(context);
+  logSync('extension activated');
+
+  startBackgroundSync();
+  context.subscriptions.push({ dispose: stopBackgroundSync });
 
   context.subscriptions.push(
     vscode.commands.registerCommand('cursorUsage.showDashboard', () => {
@@ -27,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
           title: 'Syncing Cursor billing…'
         },
         async () => {
-          const result = await syncBilling(true);
+          const result = await syncBilling(true, 'command');
           if (result.ok) {
             const bits = [
               result.source,
@@ -90,5 +139,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 }
 
 export function deactivate(): void {
+  stopBackgroundSync();
   closeDatabase();
 }
