@@ -2,7 +2,7 @@
   "name": "cursor-usage-tracker",
   "displayName": "Cursor Usage Tracker",
   "description": "Track Cursor AI usage and billing via official APIs (day/week/month/year charts)",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "publisher": "cursor-usage",
   "license": "MIT",
   "engines": {
