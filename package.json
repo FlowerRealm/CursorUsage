@@ -2,7 +2,7 @@
   "name": "cursor-usage-tracker",
   "displayName": "Cursor Usage Tracker",
   "description": "Track Cursor AI usage and billing via official APIs (day/week/month/year charts)",
-  "version": "0.2.0",
+  "version": "0.1.1",
   "publisher": "cursor-usage",
   "engines": {
     "vscode": "^1.85.0"
